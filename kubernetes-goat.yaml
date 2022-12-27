@@ -1,0 +1,80 @@
+---
+- name: Install Kubernetes Goat and pre-reqs
+  hosts: goat
+  gather_facts: true
+  become: true
+  vars:
+    docker_user: goat
+    go_ver: 1.19.4.linux-amd64 # find latest version at https://go.dev/dl/
+    kind_ver: v0.17.0/kind-linux-amd64 # find latest version at https://github.com/kubernetes-sigs/kind/releases
+    kubectl_ver: v1.26.0 # find latest version at https://dl.k8s.io/release/stable.txt
+    kubectl_arch: linux/amd64
+  tasks:
+
+  # Curl
+    - name: Install curl
+      apt:
+        name: curl
+        state: latest
+        update_cache: yes
+
+  # Docker
+    - name: Install Docker
+      shell: "curl -fsSL -o /tmp/get-docker.sh https://get.docker.com -o get-docker.sh && sh /tmp/get-docker.sh"
+
+    - name: Install Docker Compose
+      apt:
+        name: docker-compose
+        state: latest
+        update_cache: yes
+
+    - name: Check if "docker" group exists
+      group:
+        name: docker
+        state: present
+
+    - name: Add user to "docker" group
+      user:
+        name: "{{ docker_user }}"
+        groups: docker
+        append: yes
+
+  # Go
+    - name: Remove prior Go installations
+      file:
+        state: absent
+        path: "/usr/local/go"
+
+    - name: Install Go
+      unarchive:
+        src: "https://go.dev/dl/go{{ go_ver }}.tar.gz"
+        dest: "/usr/local"
+        remote_src: yes
+
+    - name: Add Go system-wide PATH environment variable
+      shell: 'echo "export PATH=/usr/local/go/bin:${PATH}" | tee /etc/profile.d/go.sh'
+
+  # Helm
+    - name: Install Helm
+      shell: "curl -fsSL -o /tmp/get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 && chmod 700 /tmp/get_helm.sh && /tmp/get_helm.sh"
+
+  # Kubectl
+    - name: Install Kubectl
+      get_url:
+        url: "https://dl.k8s.io/release/{{ kubectl_ver }}/bin/{{ kubectl_arch }}/kubectl"
+        dest: "/usr/local/bin/kubectl"
+        mode: 0755
+
+  # KiND
+    - name: Install KiND
+      get_url:
+        url: "https://github.com/kubernetes-sigs/kind/releases/download/{{ kind_ver }}"
+        checksum: "sha256:https://github.com/kubernetes-sigs/kind/releases/download/{{ kind_ver }}.sha256sum"
+        dest: "/bin/kind"
+        mode: 0755
+
+  # Kubernetes Goat
+    - name: Clone Kuberenetes Goat git repo
+      git:
+        repo: "https://github.com/madhuakula/kubernetes-goat.git"
+        dest: "/opt/kubernetes-goat"
