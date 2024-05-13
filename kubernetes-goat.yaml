@@ -5,9 +5,9 @@
   become: true
   vars:
     docker_user: goat
-    go_ver: 1.19.4.linux-amd64 # find latest version at https://go.dev/dl/
-    kind_ver: v0.17.0/kind-linux-amd64 # find latest version at https://github.com/kubernetes-sigs/kind/releases
-    kubectl_ver: v1.26.0 # find latest version at https://dl.k8s.io/release/stable.txt
+    go_ver: 1.22.3.linux-amd64 # find latest version at https://go.dev/dl/
+    kind_ver: v0.22.0/kind-linux-amd64 # find latest version at https://github.com/kubernetes-sigs/kind/releases
+    kubectl_ver: v1.30.0 # find latest version at https://dl.k8s.io/release/stable.txt
     kubectl_arch: linux/amd64
   tasks:
 
